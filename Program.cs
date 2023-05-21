@@ -77,7 +77,10 @@ internal class Program
                         }
                     }
                 }
-                System.Console.Error.WriteLine(error);
+                if (error.Length > 0)
+                {
+                    System.Console.Error.WriteLine(error.ToString());
+                }
                 return 0;
             }
             else
