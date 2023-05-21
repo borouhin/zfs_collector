@@ -44,7 +44,7 @@ internal class LineProtocolLine
             }
             catch
             {
-                System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement} : \"{_timestamp.ToString}\", skipping.");
+                System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping.");
                 _timestamp = null;
             }
         }

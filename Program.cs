@@ -70,7 +70,7 @@ internal class Program
                 {
                     if (line != "")
                     {
-                        LineProtocolLine lpl = new(line);
+                        LineProtocolLine lpl = new(line, false);
                         foreach (string promline in lpl.PrometheusLines())
                         {
                             System.Console.WriteLine(promline);
