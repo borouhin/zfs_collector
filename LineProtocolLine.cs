@@ -9,16 +9,13 @@ namespace zfs_collector;
 internal class LineProtocolLine
 {
     private string _source_line;
-    private Dictionary<string, string> _fields;
-    private Dictionary<string, string> _tags;
-    private string _measurement;
-    private long? _timestamp;
+    private Dictionary<string, string> _fields = new();
+    private Dictionary<string, string> _tags = new();
+    private string _measurement = "";
+    private long? _timestamp = null;
     internal LineProtocolLine(string line, bool process_timestamps = false)
     {
         _source_line = line;
-        _tags = new();
-        _fields = new();
-        _measurement = "";
         try
         {
             _measurement = _source_line.Split(',')[0];
@@ -31,21 +28,24 @@ internal class LineProtocolLine
                 _fields.Add(field.Split('=')[0], field.Split('=')[1].TrimEnd('u'));
             }
         }
-        catch
+        catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error parsing line: {_source_line}, skipping.");
+            System.Console.Error.WriteLine($"Error parsing line: {_source_line}, skipping:\n{ex.Message}");
+            _tags.Clear();
+            _fields.Clear();
         }
-        _timestamp = null;
         if (process_timestamps)
         {
-            try
+            if (_source_line.Count(c => c == ' ') > 1)
             {
-                _timestamp = Convert.ToInt64(_source_line.Split(' ')[2]) / 1000;
-            }
-            catch
-            {
-                System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping.");
-                _timestamp = null;
+                try
+                {
+                    _timestamp = Convert.ToInt64(_source_line.Split(' ')[2]) / 1000;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping:\n{ex.Message}");
+                }
             }
         }
     }

@@ -56,7 +56,7 @@ internal class Program
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine("Failed to start " + _zpool_path + " : " + ex.Message);
+                System.Console.Error.WriteLine($"Failed to start {_zpool_path} : {ex.Message}");
                 return 1;
             }
 
@@ -79,13 +79,14 @@ internal class Program
                 }
                 if (error.Length > 0)
                 {
-                    System.Console.Error.WriteLine(error.ToString());
+                    System.Console.Error.WriteLine($"Errors encountered running {_zpool_path} :\n{error.ToString()}");
+                    return 1;
                 }
                 return 0;
             }
             else
             {
-                System.Console.Error.WriteLine("{0} timed out", _zpool_path);
+                System.Console.Error.WriteLine($"{_zpool_path} timed out, no response in {_timeout / 1000} s.");
                 return 1;
             }
         }
