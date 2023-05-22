@@ -7,11 +7,11 @@ internal class Program
 {
     private const string _zpoolPath = "zpool_influxdb";
     private const int _timeout = 10000;
+    private static readonly AutoResetEvent _outputWaitHandle = new (false);
+    private static readonly AutoResetEvent _errorWaitHandle = new (false);
 
     public static int Main()
     {
-        using AutoResetEvent outputWaitHandle = new(false);
-        using AutoResetEvent errorWaitHandle = new(false);
         StringBuilder output = new();
         StringBuilder error = new();
         Process process = new()
@@ -29,7 +29,7 @@ internal class Program
         {
             if (e.Data == null)
             {
-                outputWaitHandle.Set();
+                _outputWaitHandle.Set();
             }
             else
             {
@@ -40,7 +40,7 @@ internal class Program
         {
             if (e.Data == null)
             {
-                errorWaitHandle.Set();
+                _errorWaitHandle.Set();
             }
             else
             {
@@ -61,9 +61,10 @@ internal class Program
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         if (process.WaitForExit(_timeout) &&
-            outputWaitHandle.WaitOne(_timeout) &&
-            errorWaitHandle.WaitOne(_timeout))
+            _outputWaitHandle.WaitOne(_timeout) &&
+            _errorWaitHandle.WaitOne(_timeout))
         {
+        
             foreach (string line in output.ToString().Split('\n'))
             {
                 if (line == "") continue;
@@ -76,6 +77,7 @@ internal class Program
             if (error.Length <= 0) return 0;
             Console.Error.WriteLine($"Errors encountered running {_zpoolPath} :\n{error}");
             return 1;
+
         }
         Console.Error.WriteLine($"{_zpoolPath} timed out, no response in {_timeout / 1000} s.");
         return 1;
