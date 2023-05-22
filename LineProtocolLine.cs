@@ -1,52 +1,40 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace zfs_collector;
+﻿namespace zfs_collector;
 internal class LineProtocolLine
 {
-    private string _source_line;
-    private Dictionary<string, string> _fields = new();
-    private Dictionary<string, string> _tags = new();
-    private string _measurement = "";
-    private long? _timestamp = null;
+    private readonly Dictionary<string, string> _fields = new();
+    private readonly Dictionary<string, string> _tags = new();
+    private readonly string _measurement = "";
+    private readonly long? _timestamp = null;
     internal LineProtocolLine(string line, bool process_timestamps = false)
     {
-        _source_line = line;
         try
         {
-            _measurement = _source_line.Split(',')[0];
-            foreach (string tag in _source_line.Split(' ')[0].Split(',').Skip(1).ToList())
+            _measurement = line.Split(',')[0];
+            foreach (string tag in line.Split(' ')[0].Split(',').Skip(1).ToList())
             {
                 _tags.Add(tag.Split('=')[0], tag.Split('=')[1]);
             }
-            foreach (string field in _source_line.Split(' ')[1].Split(',').ToList())
+            foreach (string field in line.Split(' ')[1].Split(',').ToList())
             {
                 _fields.Add(field.Split('=')[0], field.Split('=')[1].TrimEnd('u'));
             }
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error parsing line: {_source_line}, skipping:\n{ex.Message}");
+            System.Console.Error.WriteLine($"Error parsing line: {line}, skipping:\n{ex.Message}");
             _tags.Clear();
             _fields.Clear();
         }
-        if (process_timestamps)
+
+        if (!process_timestamps) return;
+        if (line.Count(c => c == ' ') <= 1) return;
+        try
         {
-            if (_source_line.Count(c => c == ' ') > 1)
-            {
-                try
-                {
-                    _timestamp = Convert.ToInt64(_source_line.Split(' ')[2]) / 1000;
-                }
-                catch (Exception ex)
-                {
-                    System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping:\n{ex.Message}");
-                }
-            }
+            _timestamp = Convert.ToInt64(line.Split(' ')[2]) / 1000;
+        }
+        catch (Exception ex)
+        {
+            System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping:\n{ex.Message}");
         }
     }
     internal List<string> PrometheusLines()
