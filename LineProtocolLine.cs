@@ -4,8 +4,8 @@ internal class LineProtocolLine
     private readonly Dictionary<string, string> _fields = new();
     private readonly Dictionary<string, string> _tags = new();
     private readonly string _measurement = "";
-    private readonly long? _timestamp = null;
-    internal LineProtocolLine(string line, bool process_timestamps = false)
+    private readonly long? _timestamp;
+    internal LineProtocolLine(string line, bool processTimestamps = false)
     {
         try
         {
@@ -21,12 +21,12 @@ internal class LineProtocolLine
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error parsing line: {line}, skipping:\n{ex.Message}");
+            Console.Error.WriteLine($"Error parsing line: {line}, skipping:\n{ex.Message}");
             _tags.Clear();
             _fields.Clear();
         }
 
-        if (!process_timestamps) return;
+        if (!processTimestamps) return;
         if (line.Count(c => c == ' ') <= 1) return;
         try
         {
@@ -34,7 +34,7 @@ internal class LineProtocolLine
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping:\n{ex.Message}");
+            Console.Error.WriteLine($"Error parsing timestamp for {_measurement}, skipping:\n{ex.Message}");
         }
     }
     internal List<string> PrometheusLines()
@@ -43,7 +43,7 @@ internal class LineProtocolLine
         foreach (KeyValuePair<string, string> field in _fields)
         {
             string tagstring = "";
-            string timestampstr = (_timestamp != null) ? " " + _timestamp.ToString() : "";
+            string timestampstr = _timestamp != null ? " " + _timestamp : "";
             foreach (KeyValuePair<string, string> tag in _tags)
             {
                 tagstring += $"{tag.Key}=\"{tag.Value}\",";

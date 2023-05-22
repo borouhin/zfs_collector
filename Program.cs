@@ -10,6 +10,10 @@ internal class Program
 
     public static int Main()
     {
+        using AutoResetEvent outputWaitHandle = new(false);
+        using AutoResetEvent errorWaitHandle = new(false);
+        StringBuilder output = new();
+        StringBuilder error = new();
         Process process = new()
         {
             StartInfo = new ProcessStartInfo
@@ -21,12 +25,7 @@ internal class Program
                 RedirectStandardError = true
             }
         };
-
-        StringBuilder output = new();
-        StringBuilder error = new();
-        using AutoResetEvent outputWaitHandle = new(false);
-        using AutoResetEvent errorWaitHandle = new(false);
-        process.OutputDataReceived += (sender, e) =>
+        process.OutputDataReceived += (_, e) =>
         {
             if (e.Data == null)
             {
@@ -37,7 +36,7 @@ internal class Program
                 output.AppendLine(e.Data);
             }
         };
-        process.ErrorDataReceived += (sender, e) =>
+        process.ErrorDataReceived += (_, e) =>
         {
             if (e.Data == null)
             {
@@ -55,7 +54,7 @@ internal class Program
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Failed to start {_zpoolPath} : {ex.Message}");
+            Console.Error.WriteLine($"Failed to start {_zpoolPath} : {ex.Message}");
             return 1;
         }
 
@@ -68,20 +67,17 @@ internal class Program
             foreach (string line in output.ToString().Split('\n'))
             {
                 if (line == "") continue;
-                LineProtocolLine lpl = new(line, false);
+                LineProtocolLine lpl = new(line);
                 foreach (string promline in lpl.PrometheusLines())
                 {
-                    System.Console.WriteLine(promline);
+                    Console.WriteLine(promline);
                 }
             }
             if (error.Length <= 0) return 0;
-            System.Console.Error.WriteLine($"Errors encountered running {_zpoolPath} :\n{error}");
+            Console.Error.WriteLine($"Errors encountered running {_zpoolPath} :\n{error}");
             return 1;
         }
-        else
-        {
-            System.Console.Error.WriteLine($"{_zpoolPath} timed out, no response in {_timeout / 1000} s.");
-            return 1;
-        }
+        Console.Error.WriteLine($"{_zpoolPath} timed out, no response in {_timeout / 1000} s.");
+        return 1;
     }
 }
